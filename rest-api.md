@@ -1,0 +1,1 @@
+회원 탈퇴 시 비밀번호를 입력해야 한다면, HTTP Method를 무엇을 사용해야 할까? 탈퇴라면 Delete가 적합하지만, REST API는 Delete 사용 시 Body에 데이터를 포함하는 걸 권장하지 않기 때문에 고민이었다. 튜터님께서는 REST API를 따르는 것이 법은 아니지만 Delete에 Body는 권장되지 않기 때문에 대신 Post를 추천해 주셨다.
