@@ -2,8 +2,40 @@
 
 #### 외부 서비스를 호출할 때 네트워크 장애 또는 외부 서비스 장애 발생 시 조치 방법
 1. Timeout
-2. Bulkhead pattern
+2. Bulkhead Pattern
 3. Circuit Breaker
 
 #### Timeout
-Connection Timeout, HTTP Connection Pool Timeout, Read Timeout 설정 적용
+Timeout은 네트워크 요청이 일정 시간 내에 완료되지 않으면 자동으로 종료될 수 있도록 제한 시간을 설정하는 방법이다.
+
+- **Connection Timeout**
+  - 서버와 연결을 시도하는 최대 시간 설정
+  - 시간 내 연결 안 될 시 실패
+- **Read Timeout**
+  - 서버가 응답을 보내는 최대 대기 시간
+  - 서버와 연결된 후 시간 내 응답이 없으면 실패
+- **HTTP Connection Pool Timeout**
+  - connection pool에서 connection을 가져오는 대기 시간 설정
+  - 시간 내 connection을 못 가져오면 실패
+
+
+#### Bulkhead Pattern
+다음과 같이 특정 서비스의 장애가 전체 서비스에 영향을 주는 경우 어떻게 해결할 수 있을까?
+
+```
+1. A 서비스, B 서비스, C 서비스 연동 코드가 HTTP 커넥션 풀을 공유한다.
+2. A 서비스의 장애로 응답 시간 지연이 발생하는 경우
+    2-1. 풀에 남은 커넥션이 점점 줄어든다.
+    2-2. 풀에서 커넥션을 구하는 대기 시간이 증가한다.
+    2-3. B, C 서비스에 대한 연동도 함께 대기한다.
+```
+
+bulkhead pattern을 적용해서 자원 사용을 분리할 수 있다. 자원을 격리하여 서비스 일부에 발생한 장애가 전체로 전파되지 않도록 보장한다.
+외부 서비스마다 다른 http connection pool을 사용하도록 하면 A 서비스에 문제가 발생해도 B, C 서비스에 영향을 최소화할 수 있다.
+
+
+#### Circuit Breaker
+외부 서비스 장애가 계속해서 발생하면 어떻게 하면 좋을까?
+외부 서비스에 장애가 발생한 상태에서 사용자의 요청 등으로 인해 운영 서버가 계속 요청을 보내면 불필요하게 응답 시간이 저해되고, 처리량도 감소한다.
+이럴 때 circuit breaker를 적용하여 오류 지속 시 일정 시간 동안 기능 실행을 차단할 수 있다.
+빠른 실패를 도와주기 때문에 외부 서비스 장애에 의한 응답 소요 시간 증가를 예방할 수 있다.
